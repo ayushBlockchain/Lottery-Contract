@@ -43,12 +43,14 @@ contract CleanLottery {
     }
 
     function pickWinner() external  {
-        uint randomIndex = uint(block.prevrandao) % playerCount;    // generate one random index number and we assume that index is winner 
+        uint randomIndex = uint(block.prevrandao) % maxPlayers;    // generate one random index number and we assume that index is winner 
         address winner = indexedPlayers[randomIndex];                    // assign index in winner variable
         uint prize = address(this).balance;                              // assign balance into price variable 
  
-        payable(winner).transfer(prize);
-
+        (bool success, ) = payable(winner).call{value: prize}("");      // send the winning amount 
+        if (!success) {
+            emit TransferFailed(winner, prize);          // failed
+        }
         emit WinnerPicked(winner, prize);                                   
 
         playerCount = 0;
